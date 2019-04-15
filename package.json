@@ -1,0 +1,7 @@
+{
+  "name": "docker-swarm-mcrouter",
+  "version": "1.0.0",
+  "dependencies": {
+    "fs-extra": "7.0.1"
+  }
+}
