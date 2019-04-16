@@ -20,8 +20,6 @@ https://hub.docker.com/r/kevbuk/mcrouter-swarm
 
 ## Quickstart
 
-`docker build -t mcrouter:dev .`
-
 `docker stack deploy -c docker-compose.yml demo`
 
 Watch the logs for `reconfigured 1 proxies with 2 pools`
