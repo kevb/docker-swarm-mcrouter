@@ -6,7 +6,17 @@ services:
     deploy:
       mode: replicated
       replicas: 2
+    networks:
+      - test_default
   mcrouter:
-    image: mcrouter
+    image: mcrouter:dev
     environment:
       MCROUTER_POOL_TEST: tasks.memcached
+      MCROUTER_PORT_TEST: 11211
+      MCROUTER_ROUTE: "PoolRoute|TEST"
+    networks:
+      - test_default
+
+networks:
+  test_default:
+    external: true
