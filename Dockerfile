@@ -1,10 +1,8 @@
 # Taken from https://github.com/Dev25/mcrouter-docker
 FROM    ubuntu:18.04
 
-ENV     MCROUTER_SWARM_DIR            /usr/local/mcrouter_swarm
+ENV     MCROUTER_SWARM_DIR      /usr/local/mcrouter_swarm
 ENV     MCROUTER_CONFIG_FILE    /etc/mcrouter/mcrouter.conf
-
-ADD     package.json $MCROUTER_SWARM_DIR/package.json
 
 RUN     apt-get update && apt-get install -y wget curl && \
         cd /tmp && \
@@ -14,7 +12,6 @@ RUN     apt-get update && apt-get install -y wget curl && \
         apt-get update && apt-get install -y --no-install-recommends nodejs ca-certificates && \
         mkdir -p $(dirname "${MCROUTER_CONFIG_FILE}") && \
         touch $MCROUTER_CONFIG_FILE && \
-        cd $MCROUTER_SWARM_DIR && npm install --production && \
         apt-get remove -y wget curl && \
         apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
