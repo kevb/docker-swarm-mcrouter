@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const { lookup } = require('dns').promises;
-const { writeFile } = require('fs');
+const { writeFile, readFile } = require('fs');
 const { spawn } = require('child_process');
 
 const configuredPools = Object.keys(process.env)
@@ -24,7 +24,15 @@ async function writeFileAsync(...args) {
   });
 }
 
+async function readFileAsync(...args) {
+  return new Promise((resolve, reject) => {
+    readFile(...args, (err, data) => err ? reject(err) : resolve(data))
+  });
+}
+
 async function main() {
+
+  const previousConfigJson = await readFileAsync(configFile, 'utf8');
 
   try {
     let pools = {};
@@ -39,7 +47,9 @@ async function main() {
     }
 
     const configJson = JSON.stringify({ pools, route: process.env.MCROUTER_ROUTE });
-    await writeFileAsync(configFile, configJson);
+    if (configJson !== previousConfigJson) {
+      await writeFileAsync(configFile, configJson);
+    }
 
   } catch (err) {
     console.error(err);
