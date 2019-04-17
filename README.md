@@ -18,6 +18,8 @@ https://hub.docker.com/r/kevbuk/mcrouter-swarm
 
 `MCROUTER_ROUTE=PoolRoute|[name]` - A route (string). In the future there should be a way to configure complex routes.
 
+`MCROUTER_PORT` - The port to expose mcrouter server on
+
 ## Quickstart
 
 `docker stack deploy -c docker-compose.yml demo`

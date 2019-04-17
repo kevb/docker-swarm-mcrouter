@@ -1,62 +1,56 @@
 #!/usr/bin/env node
 
-const dns = require('dns').promises;
-const fs = require('fs');
-const { exec } = require('child_process');
+const { lookup } = require('dns').promises;
+const { writeFile } = require('fs');
+const { spawn } = require('child_process');
 
-const configured_pools = Object.keys(process.env).filter(p => p.startsWith('MCROUTER_POOL_'));
-const config_file = process.env.MCROUTER_CONFIG_FILE;
-const updateWaitTime = 60000;
+const configuredPools = Object.keys(process.env)
+  .filter(p => p.startsWith('MCROUTER_POOL_'))
+  .map(p => p.replace('MCROUTER_POOL_', ''));
+
+if (!configuredPools.length) {
+  console.error('ERROR: No pools configured in ENV');
+  process.exit(1);
+}
+
+const configFile = process.env.MCROUTER_CONFIG_FILE;
+const updateWaitTime = 30 * 1000;
 
 let mcrouter;
 
-async function getPools() {
-
-  const pools = {};
-
-  if (!configured_pools.length) {
-    console.error('EEROR: No pools configured in ENV');
-    process.exit(1);
-  }
-
-  for (const p of configured_pools) {
-    const pool_name = p.replace('MCROUTER_POOL_', '');
-    const dnsrr_host = process.env[p];
-    const records = await dns.lookup(dnsrr_host, { all: true });
-    const port = process.env[`MCROUTER_PORT_${pool_name}`] || '11211';
-    const servers = records.map(r => `${r.address}:${port}`);
-    pools[pool_name] = { servers };
-  }
-  return pools;
+async function writeFileAsync(...args) {
+  return new Promise((resolve, reject) => {
+    writeFile(...args, err => err ? reject(err) : resolve())
+  });
 }
 
 async function main() {
+
   try {
-    const pools = await getPools();
-    const config = {
-      pools,
-      route: process.env.MCROUTER_ROUTE
+    let pools = {};
+    for (const poolName of configuredPools) {
+      const records = await lookup(process.env[`MCROUTER_POOL_${poolName}`], { all: true });
+      const port = process.env[`MCROUTER_PORT_${poolName}`] || '11211';
+      if (records.length) {
+        pools[poolName] = { servers: records.map(r => `${r.address}:${port}`) };
+      }
     }
-    const configJson = JSON.stringify(config, null, 2);
-    await fs.writeFileSync(config_file, configJson);
+
+    const configJson = JSON.stringify({ pools, route: process.env.MCROUTER_ROUTE });
+    await writeFileAsync(configFile, configJson);
 
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
 
   if (!mcrouter) {
-    console.log('Spawning mcrouter service');
-    //mcrouter = spawn( '/usr/bin/mcrouter', process.argv.slice(1,process.argv.length) );
 
-    mcrouter = exec('/usr/bin/mcrouter -p 11211 --config-file $MCROUTER_CONFIG_FILE');
-
-    mcrouter.stderr.on('data', data => console.log(data));
-    
-    mcrouter.on('exit', code => {
-      console.log("MCRouter exited - script will terminate");
-      process.exit(code);
+    mcrouter = spawn('/usr/bin/mcrouter -p $MCROUTER_PORT --config-file $MCROUTER_CONFIG_FILE', {
+      stdio: 'inherit',
+      shell: true
     });
 
+    mcrouter.on('exit', code => process.exit(code));
     
   }
 

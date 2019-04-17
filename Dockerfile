@@ -3,6 +3,7 @@ FROM    ubuntu:18.04
 
 ENV     MCROUTER_SWARM_DIR      /usr/local/mcrouter_swarm
 ENV     MCROUTER_CONFIG_FILE    /etc/mcrouter/mcrouter.conf
+ENV     MCROUTER_PORT           11211
 
 RUN     apt-get update && apt-get install -y wget curl && \
         cd /tmp && \
