@@ -29,8 +29,10 @@ async function main() {
   try {
     let pools = {};
     for (const poolName of configuredPools) {
-      const records = await lookup(process.env[`MCROUTER_POOL_${poolName}`], { all: true });
+      const host = process.env[`MCROUTER_POOL_${poolName}`];
+      const records = await lookup(host, { all: true });
       const port = process.env[`MCROUTER_PORT_${poolName}`] || '11211';
+      console.log(`Found ${records.length} records for ${host}`)
       if (records.length) {
         pools[poolName] = { servers: records.map(r => `${r.address}:${port}`) };
       }
